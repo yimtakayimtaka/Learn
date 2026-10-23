@@ -1,20 +1,22 @@
 [
-  {
-    "id": 1,
-    "text": "What is the capital of France?",
-    "options": ["London", "Berlin", "Paris", "Madrid"],
-    "answer": 2
-  },
-  {
-    "id": 2,
-    "text": "Which protocol is used to secure web traffic?",
-    "options": ["HTTP", "HTTPS", "FTP", "SMTP"],
-    "answer": 1
-  },
-  {
-    "id": 3,
-    "text": "What does SQL stand for?",
-    "options": ["Structured Query Language", "Simple Quick Logic", "System Quality Link", "Sequential Query Loop"],
-    "answer": 0
-  }
+{ "id": 1, "text": "What is the capital of France?", "options": ["London", "Berlin", "Paris", "Madrid"], "answer": 2 },
+{ "id": 2, "text": "Which protocol is used to secure web traffic?", "options": ["HTTP", "HTTPS", "FTP", "SMTP"], "answer": 1 },
+{ "id": 3, "text": "What does SQL stand for?", "options": ["Structured Query Language", "Simple Quick Logic", "System Quality Link", "Sequential Query Loop"], "answer": 0 },
+{ "id": 4, "text": "Which planet is known as the Red Planet?", "options": ["Venus", "Jupiter", "Mars", "Saturn"], "answer": 2 },
+{ "id": 5, "text": "What is the primary function of RAM in a computer?", "options": ["Long-term storage", "Temporary fast memory", "Graphics processing", "Power supply"], "answer": 1 },
+{ "id": 6, "text": "Who wrote 'Romeo and Juliet'?", "options": ["Charles Dickens", "William Shakespeare", "Mark Twain", "Jane Austen"], "answer": 1 },
+{ "id": 7, "text": "Which gas do plants absorb from the atmosphere for photosynthesis?", "options": ["Oxygen", "Nitrogen", "Carbon Dioxide", "Hydrogen"], "answer": 2 },
+{ "id": 8, "text": "What is the chemical symbol for Gold?", "options": ["Ag", "Au", "Fe", "Pb"], "answer": 1 },
+{ "id": 9, "text": "How many bits make up one byte?", "options": ["4", "8", "16", "32"], "answer": 1 },
+{ "id": 10, "text": "Which data structure uses LIFO (Last-In, First-Out)?", "options": ["Queue", "Array", "Stack", "Tree"], "answer": 2 },
+{ "id": 11, "text": "What is the largest organ in the human body?", "options": ["Liver", "Brain", "Heart", "Skin"], "answer": 3 },
+{ "id": 12, "text": "Which company developed the Python programming language?", "options": ["Google", "Microsoft", "Guido van Rossum (Benevolent Dictator)", "Apple"], "answer": 2 },
+{ "id": 13, "text": "What is the speed of light in a vacuum approximately?", "options": ["300,000 km/s", "150,000 km/s", "1,000,000 km/s", "30,000 km/s"], "answer": 0 },
+{ "id": 14, "text": "Which HTML tag is used to create a hyperlink?", "options": ["", "", "", ""], "answer": 1 },
+{ "id": 15, "text": "What is the square root of 144?", "options": ["10", "11", "12", "14"], "answer": 2 },
+{ "id": 16, "text": "Which layer of the OSI model handles routing?", "options": ["Data Link", "Network", "Transport", "Session"], "answer": 1 },
+{ "id": 17, "text": "What is the hardest natural substance on Earth?", "options": ["Gold", "Iron", "Diamond", "Quartz"], "answer": 2 },
+{ "id": 18, "text": "In JavaScript, which keyword declares a block-scoped variable?", "options": ["var", "let", "global", "define"], "answer": 1 },
+{ "id": 19, "text": "What is the smallest prime number?", "options": ["0", "1", "2", "3"], "answer": 2 },
+{ "id": 20, "text": "What port does HTTP default to?", "options": ["21", "22", "80", "443"], "answer": 2 }
 ]
