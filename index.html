@@ -395,9 +395,19 @@
                 });
             }
 
+            const nextBtn = document.getElementById('teacherNextBtn');
             const textSpan = document.getElementById('teacherNextBtnText');
+            const totalStudents = studentNames.length;
+
             if(textSpan) {
-                textSpan.innerText = `Next Question ➔ (${answeredCount}/${studentNames.length} answered)`;
+                textSpan.innerText = `Next Question ➔ (${answeredCount}/${totalStudents} answered)`;
+            }
+
+            // Green border and highlight when ALL students have answered in manual mode
+            if(totalStudents > 0 && answeredCount === totalStudents) {
+                nextBtn.className = "w-full bg-emerald-600 text-white py-2.5 rounded-lg font-bold hover:bg-emerald-700 transition shadow ring-2 ring-emerald-300";
+            } else {
+                nextBtn.className = "w-full bg-indigo-600 text-white py-2.5 rounded-lg font-bold hover:bg-indigo-700 transition shadow";
             }
         }
 
@@ -489,7 +499,7 @@
             
             if(data.type === 'FORCE_QUESTION_VIEW') {
                 if(data.targetStudent === studentName || data.targetStudent === 'ALL') {
-                    renderStudentQuestion(data.questionIndex, 0);
+                    renderReviewQuestionView(data.questionIndex);
                 }
                 return;
             }
@@ -569,6 +579,47 @@
             `;
         }
 
+        // Render Teacher Review Mode: Highlights student answer in red (if wrong) and correct answer in green
+        function renderReviewQuestionView(qIndex) {
+            if(timerInterval) clearInterval(timerInterval);
+            document.getElementById('studentTimer').innerText = 'REVIEW';
+
+            let q = questions[qIndex];
+            if(!q) return;
+
+            let studentChosenOption = tempSelectedOption; 
+
+            let optionsHTML = '';
+            q.options.forEach((opt, idx) => {
+                let borderStyle = "border-slate-200 bg-white text-slate-500 opacity-80";
+
+                if(idx === q.answer) {
+                    // Correct answer highlighted in Green
+                    borderStyle = "border-2 border-emerald-500 bg-emerald-50 text-emerald-900 font-bold shadow-sm";
+                } else if(studentChosenOption !== null && idx === studentChosenOption && studentChosenOption !== q.answer) {
+                    // Student's wrong selection highlighted in Red
+                    borderStyle = "border-2 border-rose-500 bg-rose-50 text-rose-900 font-bold shadow-sm";
+                }
+
+                optionsHTML += `
+                    <div class="w-full text-left p-3 border rounded-xl transition ${borderStyle}">
+                        <span class="inline-block w-6 font-bold">${idx+1}.</span> ${opt}
+                        ${idx === q.answer ? '<span class="float-right text-xs bg-emerald-200 text-emerald-800 font-bold px-2 py-0.5 rounded">Correct Answer</span>' : ''}
+                        ${studentChosenOption !== null && idx === studentChosenOption && studentChosenOption !== q.answer ? '<span class="float-right text-xs bg-rose-200 text-rose-800 font-bold px-2 py-0.5 rounded">Your Selection</span>' : ''}
+                    </div>`;
+            });
+
+            document.getElementById('questionContainer').innerHTML = `
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold uppercase bg-amber-100 text-amber-800 px-2 py-1 rounded">Teacher Review Mode — Question ${qIndex+1}</span>
+                    </div>
+                    <h4 class="text-lg font-semibold text-slate-800">${q.text}</h4>
+                    <div class="space-y-2">${optionsHTML}</div>
+                </div>
+            `;
+        }
+
         function handleOptionClick(qIndex, optionIdx) {
             const timeTaken = Math.round((Date.now() - questionStartTime) / 1000);
 
@@ -576,6 +627,7 @@
                 tempSelectedOption = optionIdx;
                 renderOptionButtons(qIndex, questions[qIndex]);
             } else if(currentQuizMode === '2') {
+                tempSelectedOption = optionIdx;
                 sendAnswerToTeacher(qIndex, optionIdx, timeTaken);
                 document.getElementById('questionContainer').innerHTML = `
                     <div class="text-center py-6 space-y-4">
@@ -584,6 +636,7 @@
                     </div>
                 `;
             } else if(currentQuizMode === '3') {
+                tempSelectedOption = optionIdx;
                 sendAnswerToTeacher(qIndex, optionIdx, timeTaken);
                 document.getElementById('questionContainer').innerHTML = `
                     <div class="text-center py-8 space-y-2">
