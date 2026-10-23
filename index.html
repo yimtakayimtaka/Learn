@@ -224,6 +224,7 @@
         let timerInterval = null;
         let questionStartTime = 0;
         let tempSelectedOption = null; 
+        let myAnswers = {}; // Track student answers locally for precise review highlights
 
         window.onload = async function() {
             try {
@@ -341,8 +342,8 @@
             currentChatMode = document.getElementById('chatMode').value;
             updateQuestionLimit();
             currentTeacherQIndex = 0;
+            myAnswers = {};
 
-            // Reset student progress data completely when clicking GO
             for(let name in studentsInRoom) {
                 studentsInRoom[name].answers = {};
                 studentsInRoom[name].times = {};
@@ -534,7 +535,7 @@
 
         function renderStudentQuestion(index, duration) {
             let q = questions[index];
-            tempSelectedOption = null;
+            tempSelectedOption = myAnswers[index] !== undefined ? myAnswers[index] : null;
             questionStartTime = Date.now();
 
             if(!q) {
@@ -557,7 +558,7 @@
             q.options.forEach((opt, idx) => {
                 let borderStyle = "border-slate-200 bg-white hover:bg-indigo-50 hover:border-indigo-300";
                 
-                if(currentQuizMode === '1' && tempSelectedOption === idx) {
+                if(tempSelectedOption === idx) {
                     borderStyle = "border-2 border-emerald-500 bg-emerald-50 font-semibold shadow-sm";
                 }
 
@@ -576,6 +577,7 @@
             `;
         }
 
+        // Render Teacher Review Mode: Correct answer in green, student's answer in red (if incorrect)
         function renderReviewQuestionView(qIndex) {
             if(timerInterval) clearInterval(timerInterval);
             document.getElementById('studentTimer').innerText = 'REVIEW';
@@ -583,23 +585,31 @@
             let q = questions[qIndex];
             if(!q) return;
 
-            let studentChosenOption = tempSelectedOption; 
+            let studentChosenOption = myAnswers[qIndex] !== undefined ? myAnswers[qIndex] : tempSelectedOption; 
 
             let optionsHTML = '';
             q.options.forEach((opt, idx) => {
                 let borderStyle = "border-slate-200 bg-white text-slate-500 opacity-80";
+                let badgeHTML = '';
 
-                if(idx === q.answer) {
+                if (idx === q.answer) {
                     borderStyle = "border-2 border-emerald-500 bg-emerald-50 text-emerald-900 font-bold shadow-sm";
-                } else if(studentChosenOption !== null && idx === studentChosenOption && studentChosenOption !== q.answer) {
-                    borderStyle = "border-2 border-rose-500 bg-rose-50 text-rose-900 font-bold shadow-sm";
+                    badgeHTML = '<span class="float-right text-xs bg-emerald-200 text-emerald-800 font-bold px-2 py-0.5 rounded">Correct Answer</span>';
+                }
+
+                if (studentChosenOption !== null && studentChosenOption !== undefined && idx === studentChosenOption) {
+                    if (idx === q.answer) {
+                        badgeHTML += ' <span class="float-right mr-1 text-xs bg-emerald-200 text-emerald-800 font-bold px-2 py-0.5 rounded">Your Selection</span>';
+                    } else {
+                        borderStyle = "border-2 border-rose-500 bg-rose-50 text-rose-900 font-bold shadow-sm";
+                        badgeHTML = '<span class="float-right text-xs bg-rose-200 text-rose-800 font-bold px-2 py-0.5 rounded">Your Selection (Incorrect)</span>';
+                    }
                 }
 
                 optionsHTML += `
                     <div class="w-full text-left p-3 border rounded-xl transition ${borderStyle}">
                         <span class="inline-block w-6 font-bold">${idx+1}.</span> ${opt}
-                        ${idx === q.answer ? '<span class="float-right text-xs bg-emerald-200 text-emerald-800 font-bold px-2 py-0.5 rounded">Correct Answer</span>' : ''}
-                        ${studentChosenOption !== null && idx === studentChosenOption && studentChosenOption !== q.answer ? '<span class="float-right text-xs bg-rose-200 text-rose-800 font-bold px-2 py-0.5 rounded">Your Selection</span>' : ''}
+                        ${badgeHTML}
                     </div>`;
             });
 
@@ -616,14 +626,13 @@
 
         function handleOptionClick(qIndex, optionIdx) {
             const timeTaken = Math.round((Date.now() - questionStartTime) / 1000);
+            tempSelectedOption = optionIdx;
+            myAnswers[qIndex] = optionIdx;
 
             if(currentQuizMode === '1') {
-                tempSelectedOption = optionIdx;
                 renderOptionButtons(qIndex, questions[qIndex]);
-                // Transmit immediately in background so the teacher receives it even if time expires mid-flight
                 sendAnswerToTeacher(qIndex, optionIdx, timeTaken);
             } else if(currentQuizMode === '2') {
-                tempSelectedOption = optionIdx;
                 sendAnswerToTeacher(qIndex, optionIdx, timeTaken);
                 document.getElementById('questionContainer').innerHTML = `
                     <div class="text-center py-6 space-y-4">
@@ -632,7 +641,6 @@
                     </div>
                 `;
             } else if(currentQuizMode === '3') {
-                tempSelectedOption = optionIdx;
                 sendAnswerToTeacher(qIndex, optionIdx, timeTaken);
                 document.getElementById('questionContainer').innerHTML = `
                     <div class="text-center py-8 space-y-2">
@@ -655,8 +663,9 @@
                 if(left <= 0) {
                     clearInterval(timerInterval);
                     const timeTaken = seconds;
-                    // Final lock-in transmit at expiration
-                    sendAnswerToTeacher(qIndex, tempSelectedOption !== null ? tempSelectedOption : -1, timeTaken);
+                    let finalAns = tempSelectedOption !== null ? tempSelectedOption : -1;
+                    myAnswers[qIndex] = finalAns;
+                    sendAnswerToTeacher(qIndex, finalAns, timeTaken);
                     document.getElementById('questionContainer').innerHTML = `
                         <div class="text-center py-8 text-emerald-600 font-bold">Time is up! Answer submitted. Waiting for next question...</div>
                     `;
