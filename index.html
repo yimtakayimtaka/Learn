@@ -375,7 +375,6 @@
                 return;
             }
 
-            // Reset next button counter when progressing to next question
             updateTeacherNextButtonText(true);
 
             const duration = parseInt(document.getElementById('questionDuration').value) || 15;
@@ -403,7 +402,6 @@
                 textSpan.innerText = `Next Question ➔ (${answeredCount}/${totalStudents} answered)`;
             }
 
-            // Green border and highlight when ALL students have answered in manual mode
             if(totalStudents > 0 && answeredCount === totalStudents) {
                 nextBtn.className = "w-full bg-emerald-600 text-white py-2.5 rounded-lg font-bold hover:bg-emerald-700 transition shadow ring-2 ring-emerald-300";
             } else {
@@ -479,7 +477,6 @@
                 studentsInRoom[data.name].answers[data.questionIndex] = data.selectedOption;
                 studentsInRoom[data.name].times[data.questionIndex] = data.timeTaken || 0;
                 
-                // Advance current working index for student
                 if(data.questionIndex >= studentsInRoom[data.name].currentQIndex) {
                     studentsInRoom[data.name].currentQIndex = data.questionIndex + 1;
                 }
@@ -579,7 +576,6 @@
             `;
         }
 
-        // Render Teacher Review Mode: Highlights student answer in red (if wrong) and correct answer in green
         function renderReviewQuestionView(qIndex) {
             if(timerInterval) clearInterval(timerInterval);
             document.getElementById('studentTimer').innerText = 'REVIEW';
@@ -594,10 +590,8 @@
                 let borderStyle = "border-slate-200 bg-white text-slate-500 opacity-80";
 
                 if(idx === q.answer) {
-                    // Correct answer highlighted in Green
                     borderStyle = "border-2 border-emerald-500 bg-emerald-50 text-emerald-900 font-bold shadow-sm";
                 } else if(studentChosenOption !== null && idx === studentChosenOption && studentChosenOption !== q.answer) {
-                    // Student's wrong selection highlighted in Red
                     borderStyle = "border-2 border-rose-500 bg-rose-50 text-rose-900 font-bold shadow-sm";
                 }
 
@@ -626,6 +620,8 @@
             if(currentQuizMode === '1') {
                 tempSelectedOption = optionIdx;
                 renderOptionButtons(qIndex, questions[qIndex]);
+                // Transmit immediately in background so the teacher receives it even if time expires mid-flight
+                sendAnswerToTeacher(qIndex, optionIdx, timeTaken);
             } else if(currentQuizMode === '2') {
                 tempSelectedOption = optionIdx;
                 sendAnswerToTeacher(qIndex, optionIdx, timeTaken);
@@ -659,6 +655,7 @@
                 if(left <= 0) {
                     clearInterval(timerInterval);
                     const timeTaken = seconds;
+                    // Final lock-in transmit at expiration
                     sendAnswerToTeacher(qIndex, tempSelectedOption !== null ? tempSelectedOption : -1, timeTaken);
                     document.getElementById('questionContainer').innerHTML = `
                         <div class="text-center py-8 text-emerald-600 font-bold">Time is up! Answer submitted. Waiting for next question...</div>
@@ -668,6 +665,7 @@
         }
 
         function sendAnswerToTeacher(qIndex, optionIdx, timeTaken) {
+            if(!currentChannel) return;
             currentChannel.send({
                 type: 'broadcast',
                 event: 'student_action',
@@ -782,16 +780,15 @@
                     let bg = 'bg-slate-100 text-slate-400';
                     let label = `Q${idx+1}: -`;
                     
-                    // Highlight the question the student is actively on with a yellow border
-                    if(idx === activeQuestionIdx && !student.isFinished) {
-                        bg = 'border-amber-400 bg-amber-50 ring-2 ring-amber-300 text-amber-900 font-bold';
-                        label = `Q${idx+1}: Active`;
-                    } else if(ans !== undefined && ans !== -1) {
+                    if(ans !== undefined && ans !== -1) {
                         bg = (ans === q.answer) ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-rose-100 text-rose-800 border-rose-300';
                         label = `Q${idx+1}:${ans+1} (${time !== undefined ? time + 's' : ''})`;
                     } else if(ans === -1) {
                         bg = 'bg-amber-100 text-amber-800 border-amber-300';
                         label = `Q${idx+1}: No Ans`;
+                    } else if(idx === activeQuestionIdx && !student.isFinished) {
+                        bg = 'border-amber-400 bg-amber-50 ring-2 ring-amber-300 text-amber-900 font-bold';
+                        label = `Q${idx+1}: Active`;
                     }
 
                     matrixHTML += `<button onclick="teacherForceStudentQuestionView('${name}', ${idx})" title="Click to show Q${idx+1} on ${name}'s screen" class="inline-block px-1.5 py-0.5 mx-0.5 my-0.5 border rounded text-xs transition cursor-pointer hover:scale-105 ${bg}">${label}</button>`;
