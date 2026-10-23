@@ -90,8 +90,8 @@
                             <thead>
                                 <tr class="bg-slate-100 text-slate-600">
                                     <th class="p-2 border">Student Name</th>
-                                    <th class="p-2 border">Status</th>
-                                    <th class="p-2 border">Question Matrix & Time Taken</th>
+                                    <th class="p-2 border">Progress Status</th>
+                                    <th class="p-2 border">Question Matrix (Click cell to show on student screen)</th>
                                 </tr>
                             </thead>
                             <tbody id="teacherStudentTable">
@@ -212,7 +212,7 @@
         let studentName = '';
         
         let allQuestions = [];
-        let questions = []; // Active subset of questions determined by questionLimit
+        let questions = []; 
         let questionLimit = 5;
 
         let studentsInRoom = {};
@@ -223,7 +223,7 @@
         
         let timerInterval = null;
         let questionStartTime = 0;
-        let tempSelectedOption = null; // Used for Mode 1 green highlight prior to timer end
+        let tempSelectedOption = null; 
 
         window.onload = async function() {
             try {
@@ -260,7 +260,6 @@
                 if(role === 'teacher') {
                     updateTeacherMatrix();
                     updateLeaderboard();
-                    // Broadcast updated configuration to active room students
                     if(currentChannel) {
                         currentChannel.send({
                             type: 'broadcast',
@@ -343,6 +342,14 @@
             updateQuestionLimit();
             currentTeacherQIndex = 0;
 
+            // Reset student progress data completely when clicking GO
+            for(let name in studentsInRoom) {
+                studentsInRoom[name].answers = {};
+                studentsInRoom[name].times = {};
+                studentsInRoom[name].currentQIndex = 0;
+                studentsInRoom[name].isFinished = false;
+            }
+
             const duration = parseInt(document.getElementById('questionDuration').value) || 15;
 
             if(currentQuizMode === '3') {
@@ -353,6 +360,8 @@
             }
 
             broadcastTeacherState(0, duration);
+            updateTeacherMatrix();
+            updateLeaderboard();
 
             if(currentQuizMode === '1') {
                 startTeacherTimer(duration);
@@ -365,20 +374,27 @@
                 alert("Quiz completed!");
                 return;
             }
+
+            // Reset next button counter when progressing to next question
+            updateTeacherNextButtonText(true);
+
             const duration = parseInt(document.getElementById('questionDuration').value) || 15;
             broadcastTeacherState(currentTeacherQIndex, duration);
-            updateTeacherNextButtonText();
         }
 
-        function updateTeacherNextButtonText() {
+        function updateTeacherNextButtonText(resetCounter = false) {
             if(currentQuizMode !== '3') return;
             const studentNames = Object.keys(studentsInRoom);
             let answeredCount = 0;
-            studentNames.forEach(name => {
-                if(studentsInRoom[name].answers[currentTeacherQIndex] !== undefined) {
-                    answeredCount++;
-                }
-            });
+
+            if(!resetCounter) {
+                studentNames.forEach(name => {
+                    if(studentsInRoom[name].answers[currentTeacherQIndex] !== undefined) {
+                        answeredCount++;
+                    }
+                });
+            }
+
             const textSpan = document.getElementById('teacherNextBtnText');
             if(textSpan) {
                 textSpan.innerText = `Next Question ➔ (${answeredCount}/${studentNames.length} answered)`;
@@ -425,20 +441,43 @@
             });
         }
 
+        function teacherForceStudentQuestionView(studentTarget, qIdx) {
+            currentChannel.send({
+                type: 'broadcast',
+                event: 'teacher_action',
+                payload: { 
+                    type: 'FORCE_QUESTION_VIEW', 
+                    targetStudent: studentTarget,
+                    questionIndex: qIdx
+                }
+            });
+        }
+
         function handleIncomingStudentAction(data) {
             if(role !== 'teacher') return;
             if(data.type === 'JOIN') {
                 if(!studentsInRoom[data.name]) {
-                    studentsInRoom[data.name] = { answers: {}, times: {} };
+                    studentsInRoom[data.name] = { answers: {}, times: {}, currentQIndex: 0, isFinished: false };
                 }
                 updateStudentDropdowns();
                 updateTeacherMatrix();
                 updateLeaderboard();
                 updateTeacherNextButtonText();
             } else if(data.type === 'ANSWER') {
-                if(!studentsInRoom[data.name]) studentsInRoom[data.name] = { answers: {}, times: {} };
+                if(!studentsInRoom[data.name]) studentsInRoom[data.name] = { answers: {}, times: {}, currentQIndex: 0, isFinished: false };
+                
                 studentsInRoom[data.name].answers[data.questionIndex] = data.selectedOption;
                 studentsInRoom[data.name].times[data.questionIndex] = data.timeTaken || 0;
+                
+                // Advance current working index for student
+                if(data.questionIndex >= studentsInRoom[data.name].currentQIndex) {
+                    studentsInRoom[data.name].currentQIndex = data.questionIndex + 1;
+                }
+
+                if(studentsInRoom[data.name].currentQIndex >= questions.length) {
+                    studentsInRoom[data.name].isFinished = true;
+                }
+
                 updateTeacherMatrix();
                 updateLeaderboard();
                 updateTeacherNextButtonText();
@@ -447,6 +486,14 @@
 
         function handleIncomingTeacherAction(data) {
             if(role !== 'student') return;
+            
+            if(data.type === 'FORCE_QUESTION_VIEW') {
+                if(data.targetStudent === studentName || data.targetStudent === 'ALL') {
+                    renderStudentQuestion(data.questionIndex, 0);
+                }
+                return;
+            }
+
             if(data.type === 'CONFIG_UPDATE') {
                 questionLimit = data.questionLimit;
                 questions = allQuestions.slice(0, questionLimit);
@@ -480,7 +527,7 @@
 
         function renderStudentQuestion(index, duration) {
             let q = questions[index];
-            tempSelectedOption = null; // reset temporary selection
+            tempSelectedOption = null;
             questionStartTime = Date.now();
 
             if(!q) {
@@ -503,7 +550,6 @@
             q.options.forEach((opt, idx) => {
                 let borderStyle = "border-slate-200 bg-white hover:bg-indigo-50 hover:border-indigo-300";
                 
-                // Highlight temporary choice with green border in Mode 1
                 if(currentQuizMode === '1' && tempSelectedOption === idx) {
                     borderStyle = "border-2 border-emerald-500 bg-emerald-50 font-semibold shadow-sm";
                 }
@@ -527,11 +573,9 @@
             const timeTaken = Math.round((Date.now() - questionStartTime) / 1000);
 
             if(currentQuizMode === '1') {
-                // In Mode 1: Update temporary option, visually highlight green, wait for timer end to finalize submit
                 tempSelectedOption = optionIdx;
                 renderOptionButtons(qIndex, questions[qIndex]);
             } else if(currentQuizMode === '2') {
-                // Mode 2: Immediate submit & allow student to proceed next
                 sendAnswerToTeacher(qIndex, optionIdx, timeTaken);
                 document.getElementById('questionContainer').innerHTML = `
                     <div class="text-center py-6 space-y-4">
@@ -540,7 +584,6 @@
                     </div>
                 `;
             } else if(currentQuizMode === '3') {
-                // Mode 3: Send answer immediately, then display waiting screen for teacher
                 sendAnswerToTeacher(qIndex, optionIdx, timeTaken);
                 document.getElementById('questionContainer').innerHTML = `
                     <div class="text-center py-8 space-y-2">
@@ -562,7 +605,6 @@
                 if(left >= 0) display.innerText = `${left}s`;
                 if(left <= 0) {
                     clearInterval(timerInterval);
-                    // Lock in and submit answer at timer expiration for Mode 1
                     const timeTaken = seconds;
                     sendAnswerToTeacher(qIndex, tempSelectedOption !== null ? tempSelectedOption : -1, timeTaken);
                     document.getElementById('questionContainer').innerHTML = `
@@ -676,13 +718,22 @@
                 let student = studentsInRoom[name];
                 let matrixHTML = '';
                 
+                let activeQuestionIdx = student.currentQIndex;
+                if(currentQuizMode !== '2') {
+                    activeQuestionIdx = currentTeacherQIndex;
+                }
+
                 questions.forEach((q, idx) => {
                     let ans = student.answers[idx];
                     let time = student.times[idx];
                     let bg = 'bg-slate-100 text-slate-400';
                     let label = `Q${idx+1}: -`;
                     
-                    if(ans !== undefined && ans !== -1) {
+                    // Highlight the question the student is actively on with a yellow border
+                    if(idx === activeQuestionIdx && !student.isFinished) {
+                        bg = 'border-amber-400 bg-amber-50 ring-2 ring-amber-300 text-amber-900 font-bold';
+                        label = `Q${idx+1}: Active`;
+                    } else if(ans !== undefined && ans !== -1) {
                         bg = (ans === q.answer) ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-rose-100 text-rose-800 border-rose-300';
                         label = `Q${idx+1}:${ans+1} (${time !== undefined ? time + 's' : ''})`;
                     } else if(ans === -1) {
@@ -690,13 +741,18 @@
                         label = `Q${idx+1}: No Ans`;
                     }
 
-                    matrixHTML += `<span class="inline-block px-1.5 py-0.5 mx-0.5 my-0.5 border rounded text-xs font-semibold ${bg}">${label}</span>`;
+                    matrixHTML += `<button onclick="teacherForceStudentQuestionView('${name}', ${idx})" title="Click to show Q${idx+1} on ${name}'s screen" class="inline-block px-1.5 py-0.5 mx-0.5 my-0.5 border rounded text-xs transition cursor-pointer hover:scale-105 ${bg}">${label}</button>`;
                 });
+
+                let statusBadge = `<span class="text-emerald-600 font-semibold text-xs">Working (Q${activeQuestionIdx + 1})</span>`;
+                if(student.isFinished || activeQuestionIdx >= questions.length) {
+                    statusBadge = `<span class="text-indigo-600 font-bold text-xs bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200">Finished ✅</span>`;
+                }
 
                 tbody.innerHTML += `
                     <tr class="border-b">
                         <td class="p-2 border font-semibold">${name}</td>
-                        <td class="p-2 border text-xs text-emerald-600 font-semibold">Active</td>
+                        <td class="p-2 border">${statusBadge}</td>
                         <td class="p-2 border">${matrixHTML}</td>
                     </tr>
                 `;
@@ -727,7 +783,6 @@
                 stats.push({ name, score: correctCount, percentage, totalTime });
             }
 
-            // Sort leaderboard by highest score, then by fastest total time
             stats.sort((a, b) => b.score - a.score || a.totalTime - b.totalTime);
 
             if(stats.length === 0) {
