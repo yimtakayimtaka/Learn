@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "text": "What is the capital of France?",
+    "options": ["London", "Berlin", "Paris", "Madrid"],
+    "answer": 2
+  },
+  {
+    "id": 2,
+    "text": "Which protocol is used to secure web traffic?",
+    "options": ["HTTP", "HTTPS", "FTP", "SMTP"],
+    "answer": 1
+  },
+  {
+    "id": 3,
+    "text": "What does SQL stand for?",
+    "options": ["Structured Query Language", "Simple Quick Logic", "System Quality Link", "Sequential Query Loop"],
+    "answer": 0
+  }
+]
