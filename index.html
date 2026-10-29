@@ -13,20 +13,39 @@
 
     <!-- Header -->
     <header class="bg-indigo-600 text-white p-4 shadow-md flex justify-between items-center">
-        <h1 class="text-xl font-bold">Classroom Live Portal</h1>
-        <div id="connectionStatus" class="text-xs bg-emerald-500 text-white px-3 py-1 rounded-full font-semibold">Connected to Supabase</div>
+        <div class="flex items-center gap-3">
+            <h1 class="text-xl font-bold">Classroom Live & Learn Portal</h1>
+            <span id="activeRoleBadge" class="hidden text-xs bg-indigo-800 text-indigo-100 px-2.5 py-1 rounded-full uppercase font-semibold border border-indigo-500"></span>
+        </div>
+        <div class="flex items-center gap-3">
+            <div id="connectionStatus" class="text-xs bg-emerald-500 text-white px-3 py-1 rounded-full font-semibold">Connected to Supabase</div>
+            <button onclick="resetPortal()" class="text-xs bg-indigo-700 hover:bg-indigo-800 text-white px-3 py-1 rounded-md transition border border-indigo-400">Home</button>
+        </div>
     </header>
 
     <!-- Main Container -->
     <main class="flex-1 max-w-6xl w-full mx-auto p-4 md:p-6">
 
         <!-- ROLE SELECTION SCREEN -->
-        <div id="roleScreen" class="max-w-md mx-auto bg-white p-8 rounded-xl shadow-lg border border-slate-200 mt-10 text-center">
-            <h2 class="text-2xl font-bold mb-2 text-slate-800">Select Your Portal View</h2>
-            <p class="text-sm text-slate-500 mb-6">Loaded <span id="questionCountBadge" class="font-bold text-indigo-600">0</span> total questions from questions.json</p>
-            <div class="space-y-4">
-                <button onclick="showTeacherPortal()" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold text-lg hover:bg-indigo-700 transition shadow">Teacher Portal</button>
-                <button onclick="showStudentPortal()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold text-lg hover:bg-emerald-700 transition shadow">Student Portal</button>
+        <div id="roleScreen" class="max-w-md mx-auto bg-white p-8 rounded-xl shadow-lg border border-slate-200 mt-10 text-center space-y-6">
+            <div>
+                <h2 class="text-2xl font-bold text-slate-800">Select Your Portal View</h2>
+                <p class="text-sm text-slate-500 mt-1">Loaded <span id="questionCountBadge" class="font-bold text-indigo-600">0</span> total questions from questions.json</p>
+            </div>
+            
+            <div class="space-y-3">
+                <button onclick="showTeacherPortal()" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold text-base hover:bg-indigo-700 transition shadow flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    Teacher Portal
+                </button>
+                <button onclick="showStudentPortal()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold text-base hover:bg-emerald-700 transition shadow flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    Student Portal
+                </button>
+                <button onclick="showLearnPortal()" class="w-full bg-amber-600 text-white py-3 rounded-xl font-bold text-base hover:bg-amber-700 transition shadow flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                    Learn Mode (Self-Paced Practice)
+                </button>
             </div>
         </div>
 
@@ -198,6 +217,175 @@
             </div>
         </div>
 
+        <!-- LEARN PORTAL -->
+        <div id="learnView" class="hidden max-w-4xl mx-auto space-y-6">
+            <!-- LOGIN / REGISTER SCREEN -->
+            <div id="learnAuthCard" class="max-w-md mx-auto bg-white p-8 rounded-xl shadow-lg border border-slate-200 space-y-6">
+                <div class="text-center">
+                    <h2 class="text-2xl font-bold text-amber-700">Learn Mode Login</h2>
+                    <p class="text-xs text-slate-500 mt-1">Access persistent question practice & track performance analytics</p>
+                </div>
+                
+                <div id="learnAuthError" class="hidden p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-lg"></div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Username</label>
+                        <input type="text" id="learnUsernameInput" placeholder="Enter username..." class="w-full p-3 border rounded-lg text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Password</label>
+                        <input type="password" id="learnPasswordInput" placeholder="Enter password..." class="w-full p-3 border rounded-lg text-sm">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 pt-2">
+                        <button onclick="handleLearnLogin()" class="bg-amber-600 text-white py-2.5 rounded-lg font-bold text-sm hover:bg-amber-700 transition shadow">Log In</button>
+                        <button onclick="handleLearnRegister()" class="bg-slate-100 text-slate-700 py-2.5 rounded-lg font-bold text-sm hover:bg-slate-200 transition border">Register</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LEARN DASHBOARD -->
+            <div id="learnDashboardCard" class="hidden space-y-6">
+                <!-- User Banner -->
+                <div class="bg-white p-6 rounded-xl shadow border border-slate-200 flex flex-wrap justify-between items-center gap-4">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-xl font-bold text-amber-800">Learn Mode Practice Dashboard</h2>
+                            <span id="learnUserWelcome" class="text-xs bg-amber-100 text-amber-900 font-bold px-2.5 py-1 rounded-full border border-amber-300"></span>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-1">Select questions, configure test size, or run Improve Mode targeting weak areas.</p>
+                    </div>
+                    <button onclick="handleLearnLogout()" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg font-semibold text-sm hover:bg-slate-300">Logout</button>
+                </div>
+
+                <!-- Configuration & Selection Panel -->
+                <div class="bg-white p-6 rounded-xl shadow border border-slate-200 space-y-5">
+                    <div class="flex justify-between items-center border-b pb-3">
+                        <h3 class="font-bold text-slate-700">Question Pool & Sampling Configuration</h3>
+                        <div class="flex gap-2 text-xs">
+                            <button onclick="setAllLearnQuestions(true)" class="text-amber-700 hover:underline font-semibold">Select All</button>
+                            <span class="text-slate-300">|</span>
+                            <button onclick="setAllLearnQuestions(false)" class="text-slate-500 hover:underline">Deselect All</button>
+                        </div>
+                    </div>
+
+                    <!-- Question Checkboxes -->
+                    <div id="learnQuestionsList" class="max-h-48 overflow-y-auto space-y-2 border p-3 rounded-lg bg-slate-50 text-sm">
+                        <!-- Populated dynamically -->
+                    </div>
+
+                    <!-- Sampling Controls -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center bg-amber-50/50 p-4 rounded-xl border border-amber-100">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Number of Questions for Test</label>
+                            <div class="flex gap-2">
+                                <button onclick="quickSelectLearnCount(5)" class="px-3 py-1.5 bg-white border rounded-lg text-xs font-semibold hover:bg-amber-100">Random 5</button>
+                                <button onclick="quickSelectLearnCount(10)" class="px-3 py-1.5 bg-white border rounded-lg text-xs font-semibold hover:bg-amber-100">Random 10</button>
+                                <button onclick="quickSelectLearnCount('all')" class="px-3 py-1.5 bg-white border rounded-lg text-xs font-semibold hover:bg-amber-100">All Selected</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Custom Test Size</label>
+                            <input type="number" id="learnTestSizeInput" value="5" min="1" class="w-full p-2 border rounded-lg text-sm bg-white">
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+                        <button onclick="startLearnQuiz('standard')" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold text-base hover:bg-emerald-700 transition shadow flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            🚀 Click GO (Start Practice Test)
+                        </button>
+                        <button onclick="startLearnQuiz('improve')" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold text-base hover:bg-indigo-700 transition shadow flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            ⚡ Improve Mode (Target Weakest Questions)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- PERFORMANCE ANALYTICS & GRAPH SECTION -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Historical Progression Graph -->
+                    <div class="bg-white p-6 rounded-xl shadow border border-slate-200 space-y-3">
+                        <h3 class="font-bold text-slate-700 border-b pb-2 flex justify-between items-center">
+                            <span>Score Improvement Over Time</span>
+                            <span class="text-xs text-slate-400 font-normal">Percentage (%) per test</span>
+                        </h3>
+                        <div class="w-full h-48 bg-slate-50 border rounded-lg flex items-center justify-center p-2">
+                            <canvas id="learnProgressCanvas" class="w-full h-full"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Question Mastery Stats -->
+                    <div class="bg-white p-6 rounded-xl shadow border border-slate-200 space-y-3">
+                        <h3 class="font-bold text-slate-700 border-b pb-2">Question Mastery Breakdown</h3>
+                        <div class="overflow-y-auto max-h-48 border rounded-lg">
+                            <table class="w-full text-left border-collapse text-xs">
+                                <thead>
+                                    <tr class="bg-slate-100 text-slate-600">
+                                        <th class="p-2 border">Question ID</th>
+                                        <th class="p-2 border">Attempts</th>
+                                        <th class="p-2 border">Accuracy</th>
+                                        <th class="p-2 border">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="learnMasteryTable">
+                                    <tr><td colspan="4" class="p-4 text-center text-slate-400">No practice history yet. Take a test!</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ACTIVE LEARN QUIZ EXECUTION -->
+            <div id="learnQuizCard" class="hidden bg-white p-6 rounded-xl shadow border border-slate-200 space-y-5 max-w-xl mx-auto">
+                <div class="flex justify-between items-center border-b pb-3">
+                    <span id="learnQuizTag" class="text-xs font-bold uppercase bg-amber-100 text-amber-800 px-2.5 py-1 rounded"></span>
+                    <span id="learnQuestionProgress" class="font-mono text-sm font-bold text-slate-600">Question 1 of 5</span>
+                </div>
+                <div id="learnQuestionContainer" class="py-2"></div>
+            </div>
+
+            <!-- TEST RESULTS & SUMMARY SCREEN -->
+            <div id="learnSummaryCard" class="hidden bg-white p-6 rounded-xl shadow border border-slate-200 space-y-6 max-w-2xl mx-auto">
+                <div class="text-center border-b pb-4 space-y-1">
+                    <h3 class="text-2xl font-bold text-slate-800">Test Completed! 🎉</h3>
+                    <p id="learnSummarySub" class="text-sm text-slate-500"></p>
+                </div>
+
+                <div class="grid grid-cols-3 gap-4 text-center">
+                    <div class="bg-slate-50 p-4 rounded-xl border">
+                        <div class="text-xs text-slate-500 font-semibold uppercase">Score</div>
+                        <div id="learnSummaryScore" class="text-2xl font-bold text-amber-600 mt-1">0 / 0</div>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-xl border">
+                        <div class="text-xs text-slate-500 font-semibold uppercase">Percentage</div>
+                        <div id="learnSummaryPercent" class="text-2xl font-bold text-indigo-600 mt-1">0%</div>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-xl border">
+                        <div class="text-xs text-slate-500 font-semibold uppercase">Time Taken</div>
+                        <div id="learnSummaryTime" class="text-2xl font-bold text-emerald-600 mt-1">0s</div>
+                    </div>
+                </div>
+
+                <!-- Review Wrong Answers Controls -->
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center border-b pb-2">
+                        <h4 class="font-bold text-slate-700">Question Review</h4>
+                        <span class="text-xs text-slate-400">Click answers below to review correct solutions</span>
+                    </div>
+                    <div id="learnReviewList" class="space-y-3 max-h-64 overflow-y-auto pr-1"></div>
+                </div>
+
+                <div class="pt-2">
+                    <button onclick="returnToLearnDashboard()" class="w-full bg-amber-600 text-white py-3 rounded-xl font-bold text-base hover:bg-amber-700 transition shadow">
+                        Return to Learn Dashboard
+                    </button>
+                </div>
+            </div>
+        </div>
+
     </main>
 
     <!-- Application Logic -->
@@ -224,7 +412,14 @@
         let timerInterval = null;
         let questionStartTime = 0;
         let tempSelectedOption = null; 
-        let myAnswers = {}; // Track student answers locally for precise review highlights
+        let myAnswers = {}; // Track student answers locally
+
+        /* LEARN MODE SPECIFIC STATE */
+        let currentLearnUser = null;
+        let activeLearnQuestions = [];
+        let currentLearnQIndex = 0;
+        let currentLearnSessionAnswers = [];
+        let learnQuestionStartTime = 0;
 
         window.onload = async function() {
             try {
@@ -240,6 +435,12 @@
                 const response = await fetch('questions.json');
                 if(!response.ok) throw new Error('Response error');
                 allQuestions = await response.json();
+                
+                // Add default index ID if missing
+                allQuestions.forEach((q, idx) => {
+                    if(!q.id) q.id = `q_${idx + 1}`;
+                });
+
                 document.getElementById('questionCountBadge').innerText = allQuestions.length;
                 document.getElementById('maxQuestionCountLabel').innerText = allQuestions.length;
                 
@@ -284,6 +485,7 @@
 
         function showTeacherPortal() {
             role = 'teacher';
+            setRoleBadge('Teacher');
             document.getElementById('roleScreen').classList.add('hidden');
             document.getElementById('teacherView').classList.remove('hidden');
             createRoom();
@@ -291,8 +493,32 @@
 
         function showStudentPortal() {
             role = 'student';
+            setRoleBadge('Student');
             document.getElementById('roleScreen').classList.add('hidden');
             document.getElementById('studentView').classList.remove('hidden');
+        }
+
+        function showLearnPortal() {
+            role = 'learn';
+            setRoleBadge('Learn Mode');
+            document.getElementById('roleScreen').classList.add('hidden');
+            document.getElementById('learnView').classList.remove('hidden');
+            
+            // Check session
+            const savedUser = localStorage.getItem('learn_current_user');
+            if(savedUser) {
+                currentLearnUser = savedUser;
+                renderLearnDashboard();
+            } else {
+                document.getElementById('learnAuthCard').classList.remove('hidden');
+                document.getElementById('learnDashboardCard').classList.add('hidden');
+            }
+        }
+
+        function setRoleBadge(text) {
+            const badge = document.getElementById('activeRoleBadge');
+            badge.innerText = text;
+            badge.classList.remove('hidden');
         }
 
         function createRoom() {
@@ -577,7 +803,6 @@
             `;
         }
 
-        // Render Teacher Review Mode: Correct answer in green, student's answer in red (if incorrect)
         function renderReviewQuestionView(qIndex) {
             if(timerInterval) clearInterval(timerInterval);
             document.getElementById('studentTimer').innerText = 'REVIEW';
@@ -867,6 +1092,402 @@
             });
 
             leaderboardTable.innerHTML = rows;
+        }
+
+        /* ------------------------------------------------------------------ */
+        /*                          LEARN MODE LOGIC                          */
+        /* ------------------------------------------------------------------ */
+
+        function getStoredLearnUsers() {
+            return JSON.parse(localStorage.getItem('learn_users_db') || '{}');
+        }
+
+        function setStoredLearnUsers(db) {
+            localStorage.setItem('learn_users_db', JSON.stringify(db));
+        }
+
+        function handleLearnRegister() {
+            const user = document.getElementById('learnUsernameInput').value.trim();
+            const pass = document.getElementById('learnPasswordInput').value.trim();
+            const errDiv = document.getElementById('learnAuthError');
+
+            if(!user || !pass) {
+                errDiv.innerText = "Please enter both username and password.";
+                errDiv.classList.remove('hidden');
+                return;
+            }
+
+            let db = getStoredLearnUsers();
+            if(db[user]) {
+                errDiv.innerText = "Username already exists. Please login.";
+                errDiv.classList.remove('hidden');
+                return;
+            }
+
+            db[user] = pass;
+            setStoredLearnUsers(db);
+            currentLearnUser = user;
+            localStorage.setItem('learn_current_user', user);
+            errDiv.classList.add('hidden');
+            renderLearnDashboard();
+        }
+
+        function handleLearnLogin() {
+            const user = document.getElementById('learnUsernameInput').value.trim();
+            const pass = document.getElementById('learnPasswordInput').value.trim();
+            const errDiv = document.getElementById('learnAuthError');
+
+            let db = getStoredLearnUsers();
+            if(!db[user] || db[user] !== pass) {
+                errDiv.innerText = "Invalid username or password.";
+                errDiv.classList.remove('hidden');
+                return;
+            }
+
+            currentLearnUser = user;
+            localStorage.setItem('learn_current_user', user);
+            errDiv.classList.add('hidden');
+            renderLearnDashboard();
+        }
+
+        function handleLearnLogout() {
+            localStorage.removeItem('learn_current_user');
+            currentLearnUser = null;
+            document.getElementById('learnDashboardCard').classList.add('hidden');
+            document.getElementById('learnAuthCard').classList.remove('hidden');
+        }
+
+        function renderLearnDashboard() {
+            document.getElementById('learnAuthCard').classList.add('hidden');
+            document.getElementById('learnDashboardCard').classList.remove('hidden');
+            document.getElementById('learnUserWelcome').innerText = `@${currentLearnUser}`;
+
+            // Populate checkboxes
+            const listDiv = document.getElementById('learnQuestionsList');
+            let html = '';
+            allQuestions.forEach((q, idx) => {
+                html += `
+                    <label class="flex items-start gap-2.5 p-1.5 hover:bg-white rounded cursor-pointer transition">
+                        <input type="checkbox" value="${idx}" class="learn-q-checkbox mt-1 text-amber-600 rounded border-slate-300" checked>
+                        <div>
+                            <span class="font-bold text-slate-700">Q${idx+1}.</span> ${q.text}
+                        </div>
+                    </label>
+                `;
+            });
+            listDiv.innerHTML = html;
+
+            renderLearnAnalytics();
+        }
+
+        function setAllLearnQuestions(checked) {
+            document.querySelectorAll('.learn-q-checkbox').forEach(cb => cb.checked = checked);
+        }
+
+        function quickSelectLearnCount(val) {
+            const checkboxes = Array.from(document.querySelectorAll('.learn-q-checkbox'));
+            if(val === 'all') {
+                setAllLearnQuestions(true);
+                document.getElementById('learnTestSizeInput').value = checkboxes.length;
+            } else {
+                document.getElementById('learnTestSizeInput').value = val;
+            }
+        }
+
+        function getUserHistory(user) {
+            return JSON.parse(localStorage.getItem(`learn_user_history_${user}`) || '[]');
+        }
+
+        function saveUserHistory(user, history) {
+            localStorage.setItem(`learn_user_history_${user}`, JSON.stringify(history));
+        }
+
+        function startLearnQuiz(mode) {
+            let selectedIndexes = Array.from(document.querySelectorAll('.learn-q-checkbox:checked')).map(cb => parseInt(cb.value));
+
+            if(mode === 'improve') {
+                // Fetch worst performing questions
+                const history = getUserHistory(currentLearnUser);
+                let qStats = {};
+
+                allQuestions.forEach((q, idx) => {
+                    qStats[idx] = { total: 0, correct: 0 };
+                });
+
+                history.forEach(session => {
+                    session.answers.forEach(ans => {
+                        let idx = allQuestions.findIndex(q => q.id === ans.questionId || q.text === ans.questionText);
+                        if(idx !== -1) {
+                            qStats[idx].total++;
+                            if(ans.isCorrect) qStats[idx].correct++;
+                        }
+                    });
+                });
+
+                // Find questions with low accuracy (< 100% or unattempted)
+                let weakIndexes = [];
+                for(let idx in qStats) {
+                    let st = qStats[idx];
+                    if(st.total === 0 || (st.correct / st.total) < 1.0) {
+                        weakIndexes.push(parseInt(idx));
+                    }
+                }
+
+                if(weakIndexes.length === 0) {
+                    alert("🌟 Amazing work! You have 100% mastery across all questions! Defaulting to standard selection.");
+                    selectedIndexes = allQuestions.map((_, i) => i);
+                } else {
+                    selectedIndexes = weakIndexes;
+                }
+            }
+
+            if(selectedIndexes.length === 0) {
+                alert("Please select at least one question from the pool.");
+                return;
+            }
+
+            const requestedCount = parseInt(document.getElementById('learnTestSizeInput').value) || 5;
+            
+            // Shuffle and pick requested amount
+            let shuffled = [...selectedIndexes].sort(() => Math.random() - 0.5);
+            let finalIndexes = shuffled.slice(0, Math.min(requestedCount, shuffled.length));
+
+            activeLearnQuestions = finalIndexes.map(idx => allQuestions[idx]);
+            currentLearnQIndex = 0;
+            currentLearnSessionAnswers = [];
+
+            document.getElementById('learnDashboardCard').classList.add('hidden');
+            document.getElementById('learnQuizCard').classList.remove('hidden');
+            document.getElementById('learnQuizTag').innerText = mode === 'improve' ? '⚡ Improve Mode' : 'Practice Test';
+
+            renderLearnQuestion();
+        }
+
+        function renderLearnQuestion() {
+            let q = activeLearnQuestions[currentLearnQIndex];
+            if(!q) {
+                finishLearnQuiz();
+                return;
+            }
+
+            document.getElementById('learnQuestionProgress').innerText = `Question ${currentLearnQIndex + 1} of ${activeLearnQuestions.length}`;
+            learnQuestionStartTime = Date.now();
+
+            let optionsHTML = '';
+            q.options.forEach((opt, idx) => {
+                optionsHTML += `
+                    <button onclick="handleLearnAnswer(${idx})" class="w-full text-left p-3.5 border border-slate-200 rounded-xl hover:bg-amber-50 hover:border-amber-400 transition font-medium">
+                        <span class="inline-block w-6 font-bold text-amber-700">${idx+1}.</span> ${opt}
+                    </button>
+                `;
+            });
+
+            document.getElementById('learnQuestionContainer').innerHTML = `
+                <div class="space-y-4">
+                    <h4 class="text-lg font-semibold text-slate-800">${q.text}</h4>
+                    <div class="space-y-2.5">${optionsHTML}</div>
+                </div>
+            `;
+        }
+
+        function handleLearnAnswer(optionIdx) {
+            const timeTaken = Math.round((Date.now() - learnQuestionStartTime) / 1000);
+            let q = activeLearnQuestions[currentLearnQIndex];
+            let isCorrect = (optionIdx === q.answer);
+
+            currentLearnSessionAnswers.push({
+                questionId: q.id || `q_${currentLearnQIndex + 1}`,
+                questionText: q.text,
+                chosenOption: optionIdx,
+                correctOption: q.answer,
+                isCorrect: isCorrect,
+                timeTaken: timeTaken,
+                options: q.options
+            });
+
+            currentLearnQIndex++;
+            renderLearnQuestion();
+        }
+
+        function finishLearnQuiz() {
+            document.getElementById('learnQuizCard').classList.add('hidden');
+            document.getElementById('learnSummaryCard').classList.remove('hidden');
+
+            let correctCount = currentLearnSessionAnswers.filter(a => a.isCorrect).length;
+            let totalCount = currentLearnSessionAnswers.length;
+            let percent = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
+            let totalTime = currentLearnSessionAnswers.reduce((acc, a) => acc + a.timeTaken, 0);
+
+            document.getElementById('learnSummarySub').innerText = `Attempt by @${currentLearnUser} on ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`;
+            document.getElementById('learnSummaryScore').innerText = `${correctCount} / ${totalCount}`;
+            document.getElementById('learnSummaryPercent').innerText = `${percent}%`;
+            document.getElementById('learnSummaryTime').innerText = `${totalTime}s`;
+
+            // Render Wrong / Review List
+            let reviewHTML = '';
+            currentLearnSessionAnswers.forEach((ans, idx) => {
+                let badge = ans.isCorrect 
+                    ? `<span class="text-xs bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded">Correct (${ans.timeTaken}s)</span>`
+                    : `<span class="text-xs bg-rose-100 text-rose-800 font-bold px-2 py-0.5 rounded">Incorrect (${ans.timeTaken}s)</span>`;
+
+                let optionsReview = '';
+                ans.options.forEach((opt, oIdx) => {
+                    let style = "bg-white border-slate-200 text-slate-600";
+                    if(oIdx === ans.correctOption) style = "bg-emerald-50 border-emerald-400 text-emerald-900 font-bold";
+                    if(oIdx === ans.chosenOption && !ans.isCorrect) style = "bg-rose-50 border-rose-400 text-rose-900 font-bold";
+
+                    optionsReview += `
+                        <div class="p-2 border rounded-lg text-xs ${style}">
+                            ${oIdx+1}. ${opt}
+                            ${oIdx === ans.correctOption ? ' <span class="text-emerald-700 font-semibold">(Correct Answer)</span>' : ''}
+                            ${oIdx === ans.chosenOption && !ans.isCorrect ? ' <span class="text-rose-700 font-semibold">(Your Choice)</span>' : ''}
+                        </div>
+                    `;
+                });
+
+                reviewHTML += `
+                    <div class="p-3 border rounded-xl bg-slate-50 space-y-2">
+                        <div class="flex justify-between items-start gap-2">
+                            <h5 class="text-xs font-bold text-slate-800">${idx+1}. ${ans.questionText}</h5>
+                            ${badge}
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-1.5">${optionsReview}</div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('learnReviewList').innerHTML = reviewHTML;
+
+            // Save Attempt to localStorage
+            let history = getUserHistory(currentLearnUser);
+            history.push({
+                date: new Date().toISOString(),
+                score: correctCount,
+                total: totalCount,
+                percentage: percent,
+                totalTime: totalTime,
+                answers: currentLearnSessionAnswers
+            });
+            saveUserHistory(currentLearnUser, history);
+        }
+
+        function returnToLearnDashboard() {
+            document.getElementById('learnSummaryCard').classList.add('hidden');
+            document.getElementById('learnDashboardCard').classList.remove('hidden');
+            renderLearnAnalytics();
+        }
+
+        function renderLearnAnalytics() {
+            const history = getUserHistory(currentLearnUser);
+
+            // 1. Draw Canvas Progress Chart
+            const canvas = document.getElementById('learnProgressCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas resolution
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if(history.length === 0) {
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '12px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('No practice test history recorded yet.', canvas.width / 2, canvas.height / 2);
+            } else {
+                const padding = 30;
+                const graphWidth = canvas.width - (padding * 2);
+                const graphHeight = canvas.height - (padding * 2);
+
+                // Draw background grid lines
+                ctx.strokeStyle = '#e2e8f0';
+                ctx.lineWidth = 1;
+                for(let p = 0; p <= 100; p += 25) {
+                    let y = canvas.height - padding - (p / 100 * graphHeight);
+                    ctx.beginPath();
+                    ctx.moveTo(padding, y);
+                    ctx.lineTo(canvas.width - padding, y);
+                    ctx.stroke();
+
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.font = '10px sans-serif';
+                    ctx.textAlign = 'right';
+                    ctx.fillText(`${p}%`, padding - 5, y + 3);
+                }
+
+                // Plot Line
+                const points = history.slice(-10); // Show last 10 attempts
+                const stepX = points.length > 1 ? graphWidth / (points.length - 1) : graphWidth / 2;
+
+                ctx.strokeStyle = '#d97706';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+
+                points.forEach((pt, i) => {
+                    let x = points.length > 1 ? padding + (i * stepX) : canvas.width / 2;
+                    let y = canvas.height - padding - ((pt.percentage / 100) * graphHeight);
+
+                    if(i === 0 && points.length > 1) ctx.moveTo(x, y);
+                    else if(points.length === 1) ctx.arc(x, y, 4, 0, Math.PI * 2);
+                    else ctx.lineTo(x, y);
+                });
+
+                ctx.stroke();
+
+                // Draw Dots
+                points.forEach((pt, i) => {
+                    let x = points.length > 1 ? padding + (i * stepX) : canvas.width / 2;
+                    let y = canvas.height - padding - ((pt.percentage / 100) * graphHeight);
+
+                    ctx.fillStyle = '#b45309';
+                    ctx.beginPath();
+                    ctx.arc(x, y, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+
+            // 2. Render Mastery Breakdown Table
+            let qStats = {};
+            allQuestions.forEach((q, idx) => {
+                qStats[idx] = { id: q.id || `Q${idx+1}`, total: 0, correct: 0 };
+            });
+
+            history.forEach(session => {
+                session.answers.forEach(ans => {
+                    let idx = allQuestions.findIndex(q => q.id === ans.questionId || q.text === ans.questionText);
+                    if(idx !== -1) {
+                        qStats[idx].total++;
+                        if(ans.isCorrect) qStats[idx].correct++;
+                    }
+                });
+            });
+
+            const tbody = document.getElementById('learnMasteryTable');
+            let rows = '';
+
+            allQuestions.forEach((q, idx) => {
+                let st = qStats[idx];
+                let pct = st.total > 0 ? Math.round((st.correct / st.total) * 100) : 0;
+                
+                let badge = '<span class="text-slate-400 font-semibold">Unattempted</span>';
+                if(st.total > 0) {
+                    if(pct >= 80) badge = '<span class="text-emerald-600 font-bold">Mastered ✅</span>';
+                    else if(pct >= 50) badge = '<span class="text-amber-600 font-bold">Moderate ⚠️</span>';
+                    else badge = '<span class="text-rose-600 font-bold">Needs Work ❌</span>';
+                }
+
+                rows += `
+                    <tr class="border-b">
+                        <td class="p-2 border font-bold text-slate-700">Q${idx+1}</td>
+                        <td class="p-2 border">${st.correct} / ${st.total}</td>
+                        <td class="p-2 border font-mono">${st.total > 0 ? pct + '%' : '-'}</td>
+                        <td class="p-2 border">${badge}</td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = rows;
         }
 
         function resetPortal() {
